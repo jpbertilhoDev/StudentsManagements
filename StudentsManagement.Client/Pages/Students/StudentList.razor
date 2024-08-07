@@ -1,0 +1,93 @@
+﻿@page "/students-list"
+@using StudentsManagement.Shared.Models
+@inject NavigationManager navigation;
+@inject IJSRuntime JsRuntime
+
+
+<PageTitle>Students List</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Students List</MudText>
+<MudText Class="mb-8">This component demonstrates fetching data from the server.</MudText>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" Class="float-end" Href="/add-student">Add New Student</MudButton>
+
+@if (!AllStudents.Any())
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+    <MudSimpleTable Style="overflow-x: auto;">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>FirstName</th>
+                <th>LastName</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in AllStudents)
+            {
+                <tr>
+                    <td>@student.Id</td>
+                    <td>@student.FirstName</td>
+                    <td>@student.LastName</td>
+                    <td>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Success" Href="@GetEditUrl(student.Id)">Edit</MudButton>
+                    </td>
+                    <td>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => ConfirmDelete(student.Id))">Delete</MudButton>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+}
+
+@code {
+    public List<Student> AllStudents { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllStudents();
+    }
+
+    public async Task LoadAllStudents()
+    {
+        var students = await StudentService.GetAllStudentsAsync();
+        AllStudents.Clear();
+
+        if (students is null) return;
+        foreach (var student in students)
+        {
+            AllStudents.Add(student);
+        }
+    }
+
+    private void EditStudent(int id)
+    {
+        navigation.NavigateTo($"/student/edit/{id}");
+    }
+
+    private async Task DeleteStudent(int id)
+    {
+        var result = await StudentService.DeleteStudentAsync(id);
+        await LoadAllStudents();
+    }
+
+    private async Task ConfirmDelete(int studentId)
+    {
+        bool isConfirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete student {studentId}?");
+        if (isConfirmed)
+        {
+            await DeleteStudent(studentId);
+        }
+    }
+
+    private string GetEditUrl(int studentId)
+    {
+        return $"/student/edit/{studentId}";
+    }
+}

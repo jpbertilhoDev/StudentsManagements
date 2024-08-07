@@ -1,0 +1,49 @@
+﻿@page "/add-student"
+@using StudentsManagement.Shared.Models;
+@inject NavigationManager navigation;
+@inject IJSRuntime JsRuntime
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <MudPaper>
+        <MudText Typo="Typo.h5" GutterBottom="true">Add New Student</MudText>
+        <MudDivider Class="mb-4" />
+
+        <EditForm Model="@studobj" OnValidSubmit="CreateStudent">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="First Name" @bind-Value="studobj.FirstName" Required="true" RequiredError="First name is required." />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Last Name" @bind-Value="studobj.LastName" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="mt-4 mb-4" />
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Type="Submit">Save Student</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="@Cancel">Back to List</MudButton>
+        </EditForm>
+    </MudPaper>
+</MudContainer>
+
+
+@code {
+
+    [SupplyParameterFromForm]
+    public Student studobj { get; set; } = new();
+
+   
+    protected async Task CreateStudent()
+    {
+        var result = await StudentService.AddStudentAsync(studobj);
+      
+        navigation.NavigateTo("/students-list");
+    }
+    public void Cancel()
+    {
+        navigation.NavigateTo("/students-list");
+    }
+}
